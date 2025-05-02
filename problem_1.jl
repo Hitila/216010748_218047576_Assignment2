@@ -62,13 +62,7 @@ describe(dia_data)
 table = XLSX.readtable("C:/Users/paulu/Desktop/NUST - 2025 (Masters of Data Science)/Artificial Intelligence and ML/Assignment 2/RDKit_ChemDes.xlsx", "Sheet1")
 
 # ╔═╡ fc92f523-d401-4051-9e36-fff9571a89ac
-descriptors = DataFrame(table)
-
-# ╔═╡ 6aabca81-f147-4ec4-8b3e-30f0a328be09
-missing_counts = map(col -> count(ismissing, dia_data[!, col]), names(dia_data))
-
-# ╔═╡ ea9c760a-825f-439a-9847-a49c08060464
-missing_countss = map(col -> count(ismissing, descriptors[!, col]), names(descriptors))
+metadata_df = DataFrame(table)
 
 # ╔═╡ 74e752ec-fd75-44d4-ae3b-ba55362f611c
 size(dia_data)
@@ -80,7 +74,7 @@ describe(dia_data)
 dropmissing!(dia_data)
 
 # ╔═╡ d3a7b5d3-0fc5-46bb-aef5-3f64dc35ce10
-describe(descriptors)
+describe(metadata_df)
 
 # ╔═╡ f8f6a5cc-d7b9-4e5d-9c5f-70c8553ce75c
 y = dia_data[!, 1]
@@ -107,6 +101,9 @@ const_cols = [col for col in names(X) if length(unique(X[!, col])) == 1]
 
 # ╔═╡ b97181d1-a103-4a7e-835e-dbe24a686824
 select!(X, Not(const_cols))
+
+# ╔═╡ 74149b2e-5914-414d-a429-7ee8cc72a86d
+size(X)
 
 # ╔═╡ e15e5904-2205-404c-ae5f-5a8717b1a6e2
 md"## Building the Three Clustering Models"
@@ -140,6 +137,17 @@ sil_scores = silhouettes(assignments, X_matrix'; metric=SqEuclidean(), batch_siz
 
 # ╔═╡ dd118cc2-4ee4-4165-9ba6-7c29ec46ab09
 println("Mean Silhouette Score: ", mean(sil_scores))
+
+# ╔═╡ 0714298b-d9ae-4db2-bd04-557c75138fe1
+scatter(
+    X_matrix[:, 1], X_matrix[:, 2],
+    group=assignments,
+    legend=false,
+    title="KMeans Clustering Scatterplot",
+    xlabel="Feature 1",
+    ylabel="Feature 2",
+    markersize=5
+)
 
 # ╔═╡ ba006a97-bdd5-4cec-b3f1-4e3b61e7b2b6
 # ╠═╡ disabled = true
@@ -2701,8 +2709,6 @@ version = "1.8.1+0"
 # ╠═a0221a87-9ebc-44d6-a663-cd8e6d0c5dc1
 # ╠═2a9c8785-263d-49e9-ae69-33f3afde7358
 # ╠═fc92f523-d401-4051-9e36-fff9571a89ac
-# ╠═6aabca81-f147-4ec4-8b3e-30f0a328be09
-# ╠═ea9c760a-825f-439a-9847-a49c08060464
 # ╠═74e752ec-fd75-44d4-ae3b-ba55362f611c
 # ╠═720d7ce2-35f3-4353-b702-0a9526697a3e
 # ╠═492625e5-55d9-41a3-bac2-16043f604ea2
@@ -2714,6 +2720,7 @@ version = "1.8.1+0"
 # ╠═3fb1b4b2-c3cd-4629-a847-5efd66e0dcea
 # ╠═84de4cb3-0b31-4fb3-9793-0b0563153221
 # ╠═b97181d1-a103-4a7e-835e-dbe24a686824
+# ╠═74149b2e-5914-414d-a429-7ee8cc72a86d
 # ╠═e15e5904-2205-404c-ae5f-5a8717b1a6e2
 # ╠═d9680452-de79-4a38-b3f6-0fee75437b2c
 # ╠═acc0f5b3-ecf6-4d81-b28d-a1966c17e2ad
@@ -2725,6 +2732,7 @@ version = "1.8.1+0"
 # ╠═316fb16b-750b-4835-bd4c-f737271f9510
 # ╠═34d22020-4a62-446f-992e-9e929dfdd9cf
 # ╠═dd118cc2-4ee4-4165-9ba6-7c29ec46ab09
+# ╠═0714298b-d9ae-4db2-bd04-557c75138fe1
 # ╠═ba006a97-bdd5-4cec-b3f1-4e3b61e7b2b6
 # ╠═18b630a0-eec6-48bd-8ae4-40229c8e5b30
 # ╠═961d65cd-11c8-4fea-b477-1ab0f7933d8e
