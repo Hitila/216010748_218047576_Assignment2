@@ -212,7 +212,7 @@ println("Agglomerative Hierarchical Silhouette Score: ", mean(hc_sils_score))
 # ╔═╡ a2aafa37-0fb1-409a-ae01-520f5128332d
 scatter(X_pca_matrix[:, 1], X_pca_matrix[:, 2], 
         group=convert(Vector{Int}, cluster_labels), 
-        legend=false, title="Clustered PCA Data", 
+        legend=false, title="Agglomerative Clustering Scatterplot", 
         xlabel="PCA1", ylabel="PCA2")
 
 # ╔═╡ 59261ac4-c1b2-40d4-a61f-6c66618afbbd
@@ -260,7 +260,7 @@ md"#### Which algorithm yields the best clusters? Why?"
 
 # ╔═╡ 9f1626fa-fce7-42a8-8561-27d5679e824a
 md"""
-Among the three clustering algorithms, Agglomerative Clustering yields the best clusters. It achieved the highest silhouette score (0.99), indicating strong intra-cluster similarity and inter-clustering separation. In contrast, K-Means scored poorly (~0.16), suggesting overlapping clusters. Although GMM provided a moderate  log-likelihood of -151,956, it did not outperform Agglomerative Clustering in visual separation or cluster cohesion.
+Among the three clustering algorithms, Agglomerative Clustering yields the best clusters. It achieved the highest silhouette score (0.99), indicating strong intra-cluster similarity and inter-clustering separation. This is also shown in its Scatterplot Graph. In contrast, K-Means scored poorly (~0.16), suggesting overlapping clusters. Although GMM provided a moderate  log-likelihood of -151,956, it did not outperform Agglomerative Clustering in visual separation or cluster cohesion.
 
 Hence: Gaussian Mixture Model (GMM) yields the best clusters in this case, based on both silhouette score and log-likelihood."""
 
