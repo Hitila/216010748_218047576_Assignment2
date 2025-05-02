@@ -90,16 +90,23 @@ X = dia_data[:, 2:end]
 
 # ╔═╡ 961c6be4-b698-4df4-99f6-9a68e241c152
 for col in names(X)
-    if eltype(X[!, col]) <: Integer
+    if !(eltype(X[!, col]) <: AbstractFloat)
         X[!, col] = convert.(Float64, X[!, col])
     end
 end
+
 
 # ╔═╡ 1fbfb570-3c8e-4e98-8573-11865cfbc99f
 schema(X) |> DataFrames.DataFrame
 
 # ╔═╡ 3fb1b4b2-c3cd-4629-a847-5efd66e0dcea
 size(X)
+
+# ╔═╡ 84de4cb3-0b31-4fb3-9793-0b0563153221
+const_cols = [col for col in names(X) if length(unique(X[!, col])) == 1]
+
+# ╔═╡ b97181d1-a103-4a7e-835e-dbe24a686824
+select!(X, Not(const_cols))
 
 # ╔═╡ e15e5904-2205-404c-ae5f-5a8717b1a6e2
 md"## Building the Three Clustering Models"
@@ -120,13 +127,13 @@ mach = machine(model, X)
 MLJ.fit!(mach, force=true)
 
 # ╔═╡ 421e1c7c-0a15-4720-9da0-0196014c72eb
-rpt = report(mach)
+rpt1 = report(mach)
 
 # ╔═╡ 5dab414f-a42e-4f29-aa24-64df591f8b72
 X_matrix = Matrix(X)
 
 # ╔═╡ 316fb16b-750b-4835-bd4c-f737271f9510
-assignments = rpt.k_means.assignments
+assignments = rpt1.k_means.assignments
 
 # ╔═╡ 34d22020-4a62-446f-992e-9e929dfdd9cf
 sil_scores = silhouettes(assignments, X_matrix'; metric=SqEuclidean(), batch_size=256)
@@ -168,7 +175,7 @@ X_pca = MLJ.transform(dia_pca_mach, X)
 amc_mach = machine(amc_model)
 
 # ╔═╡ 29ef11e6-88f1-486d-97f1-4850dbe640d0
-MLJ.fit!(amc_mach)
+MLJ.fit!(amc_mach, force=true)
 
 # ╔═╡ 72d023df-f628-4370-888e-bbeee0d8863e
 cluster_labels = MLJ.predict(amc_mach, X_pca)
@@ -192,13 +199,13 @@ X_pca_matrix = Matrix(X_pca)
 hc_sils_score = silhouettes(convert(Vector{Int}, cluster_labels), X_pca_matrix'; metric=SqEuclidean(), batch_size=256)
 
 # ╔═╡ d194b06c-d793-4ee0-b40c-e1b3af325d9a
-mean(hc_sils_score)
+println("Agglomerative Hierarchical Silhouette Score: ", mean(hc_sils_score))
 
 # ╔═╡ a2aafa37-0fb1-409a-ae01-520f5128332d
 scatter(X_pca_matrix[:, 1], X_pca_matrix[:, 2], 
         group=convert(Vector{Int}, cluster_labels), 
         legend=false, title="Clustered PCA Data", 
-        xlabel="PC1", ylabel="PC2")
+        xlabel="PCA1", ylabel="PCA2")
 
 # ╔═╡ 59261ac4-c1b2-40d4-a61f-6c66618afbbd
 md"### Gaussian Mixture Model"
@@ -213,22 +220,19 @@ std_model = Standardizer()
 std_machine = machine(std_model, X)
 
 # ╔═╡ 67826859-57be-4e66-85db-fb661277e3e9
-MLJ.fit!(std_machine)
+MLJ.fit!(std_machine, force=true)
 
 # ╔═╡ f68c2f78-25fe-4cb3-9875-67d8e3cffabc
 X_scaled = MLJ.transform(std_machine, X)
 
 # ╔═╡ 8353f071-8562-4455-b881-d2895f89e471
-gmm_model = GMM(n_classes=2)
+gmm_model = GMM(n_classes=6)
 
 # ╔═╡ f2668199-bb65-483b-a4ce-ccff55fad437
 gmm_machine = machine(gmm_model, X_scaled)
 
 # ╔═╡ 5c70d25a-5137-4882-85f4-ddf147b0a48e
 MLJ.fit!(gmm_machine)
-
-# ╔═╡ e262a49e-65f3-4a03-8d32-05894b3377d1
-
 
 # ╔═╡ 12cdca29-82ac-4b36-aa1c-cf93973e19b6
 md"## Comparison of All Three Algorithms"
@@ -247,10 +251,8 @@ md"#### Which algorithm yields the best clusters? Why?"
 
 
 # ╔═╡ 9f1626fa-fce7-42a8-8561-27d5679e824a
-md"""mean(silhouette_scores)     
-log_likelihood (for GMM)
-
-Among the three clustering algorithms, Agglomerative Clustering yields the best clusters. It achieved the highest silhouette score (0.99), indicating strong intra-cluster similarity and inter-cluster separation. In contrast, K-Means scored poorly (~0.16), suggesting overlapping clusters. Although GMM provided a moderate silhouette score and a log-likelihood of -151,956, it did not outperform Agglomerative Clustering in visual separation or cluster cohesion.
+md"""
+Among the three clustering algorithms, Agglomerative Clustering yields the best clusters. It achieved the highest silhouette score (0.99), indicating strong intra-cluster similarity and inter-clustering separation. In contrast, K-Means scored poorly (~0.16), suggesting overlapping clusters. Although GMM provided a moderate  log-likelihood of -151,956, it did not outperform Agglomerative Clustering in visual separation or cluster cohesion.
 
 Hence: Gaussian Mixture Model (GMM) yields the best clusters in this case, based on both silhouette score and log-likelihood."""
 
@@ -2710,6 +2712,8 @@ version = "1.8.1+0"
 # ╠═961c6be4-b698-4df4-99f6-9a68e241c152
 # ╠═1fbfb570-3c8e-4e98-8573-11865cfbc99f
 # ╠═3fb1b4b2-c3cd-4629-a847-5efd66e0dcea
+# ╠═84de4cb3-0b31-4fb3-9793-0b0563153221
+# ╠═b97181d1-a103-4a7e-835e-dbe24a686824
 # ╠═e15e5904-2205-404c-ae5f-5a8717b1a6e2
 # ╠═d9680452-de79-4a38-b3f6-0fee75437b2c
 # ╠═acc0f5b3-ecf6-4d81-b28d-a1966c17e2ad
@@ -2750,7 +2754,6 @@ version = "1.8.1+0"
 # ╠═8353f071-8562-4455-b881-d2895f89e471
 # ╠═f2668199-bb65-483b-a4ce-ccff55fad437
 # ╠═5c70d25a-5137-4882-85f4-ddf147b0a48e
-# ╠═e262a49e-65f3-4a03-8d32-05894b3377d1
 # ╠═12cdca29-82ac-4b36-aa1c-cf93973e19b6
 # ╠═ea7e54dc-ff4c-4939-ba3b-5aa0a5ba3047
 # ╠═1fd98f75-a761-4647-aa41-63f6f2c24e21
